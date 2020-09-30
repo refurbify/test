@@ -1,0 +1,283 @@
+{
+  "openapi" : "3.0.0",
+  "servers" : [ {
+    "description" : "SwaggerHub API Auto Mocking",
+    "url" : "https://virtserver.swaggerhub.com/Neanex/SmartBuildings/1.0.0"
+  } ],
+  "info" : {
+    "description" : "API to support SmartBuildings use cases.",
+    "version" : "1.0.0",
+    "title" : "SmartBuildings API",
+    "contact" : {
+      "email" : "thomas.vandriessche@neanex.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "tags" : [ {
+    "name" : "developers",
+    "description" : "Operations available to regular developers"
+  } ],
+  "paths" : {
+    "/observations" : {
+      "get" : {
+        "tags" : [ "developers" ],
+        "summary" : "Receives live sensor data",
+        "operationId" : "getObservations",
+        "description" : "By retrieving live sensor data from the IoT platform we can provide this data in the detail of the sensor, but also as a heatmap in our 3D viewer.\n",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "sensorId",
+          "description" : "Identifies the sensor for which we want to retreive live data. ONLY Required if featureOfInterestId is empty.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "featureOfInterestId",
+          "description" : "Identifies the feature of interest for which we want to retrieve live data. ONLY Required if sensorId is empty.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "propertyTypeId",
+          "description" : "Identifies what is being measured (e.g. temperature)",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "queryTypeLeveId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Live sensor data is succesfully received.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ObservationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Something went wrong on the server."
+          },
+          "401" : {
+            "description" : "Unauthorized. We couldn't authorize the Authorizaiton header."
+          }
+        }
+      }
+    },
+    "/sensors" : {
+      "post" : {
+        "tags" : [ "developers" ],
+        "summary" : "adds sensor data",
+        "operationId" : "addSensors",
+        "description" : "By posting sensor data to the Neanex platform we can include this data in our tree structure and provide an integration with an IoT platform.\n",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "X-Neanex-Project",
+          "description" : "Identifies the project for which sensor data is posted.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "header",
+          "name" : "Authorization",
+          "description" : "Secures the api.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SensorBody"
+              }
+            }
+          },
+          "description" : "Sensors to add"
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Sensor data is succesfully created. Created Neanex identifiers are returned in the response.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "uuid"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Something went wrong on the server."
+          },
+          "401" : {
+            "description" : "Unauthorized. We couldn't authorize the Authorizaiton header."
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "SensorBody" : {
+        "type" : "object",
+        "required" : [ "sensors", "customerLocationId" ],
+        "properties" : {
+          "sensors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Sensor"
+            }
+          },
+          "customerLocationId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "ObservationResponse" : {
+        "type" : "object",
+        "required" : [ "observations" ],
+        "properties" : {
+          "observations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Observation"
+            }
+          }
+        }
+      },
+      "Result" : {
+        "type" : "object",
+        "required" : [ "id", "value" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "value" : {
+            "type" : "string"
+          },
+          "scale" : {
+            "type" : "string",
+            "description" : "(A/B) A defines the value of the scale. B defines the span of the scale. e.g. 6/2 means there are 6 levels on the scale and level 2 has to be shown."
+          }
+        }
+      },
+      "Sensor" : {
+        "type" : "object",
+        "required" : [ "id", "type" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "observes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ObservableProperty"
+            }
+          }
+        }
+      },
+      "ObservableProperty" : {
+        "type" : "object",
+        "required" : [ "id" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Observation" : {
+        "type" : "object",
+        "required" : [ "id" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sensor" : {
+            "$ref" : "#/components/schemas/Sensor"
+          },
+          "featureOfInterest" : {
+            "$ref" : "#/components/schemas/FeatureOfInterest"
+          },
+          "unitOfMeasurement" : {
+            "$ref" : "#/components/schemas/UnitOfMeasurement"
+          },
+          "result" : {
+            "$ref" : "#/components/schemas/Result"
+          }
+        }
+      },
+      "FeatureOfInterest" : {
+        "type" : "object",
+        "required" : [ "id" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UnitOfMeasurement" : {
+        "type" : "object",
+        "required" : [ "id", "abbreviation" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "abbreviation" : {
+            "type" : "string"
+          }
+        }
+      }
+    }
+  }
+}
